@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Password Manager</title>
+    <!-- Use Tailwind CSS for a clean, responsive design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for a better look and feel */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            transition: background-image 0.5s ease-in-out;
+        }
+        
+        .backdrop-blur {
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        
+        /* Table column width adjustments */
+        .password-table {
+            table-layout: fixed;
+        }
+        
+        .password-table th:nth-child(1), /* Icon */
+        .password-table td:nth-child(1) {
+            width: 70px;
+            text-align: center;
+        }
+        
+        .password-table th:nth-child(2), /* Title */
+        .password-table td:nth-child(2) {
+            width: 150px;
+        }
+        
+        .password-table th:nth-child(3), /* Website */
+        .password-table td:nth-child(3) {
+            width: 200px;
+        }
+        
+        .password-table th:nth-child(4), /* Username */
+        .password-table td:nth-child(4) {
+            width: 180px;
+        }
+        
+        .password-table th:nth-child(5), /* Password */
+        .password-table td:nth-child(5) {
+            width: 160px;
+        }
+        
+        .password-table th:nth-child(6), /* Created */
+        .password-table td:nth-child(6) {
+            width: 130px;
+        }
+        
+        .password-table th:nth-child(7), /* Actions */
+        .password-table td:nth-child(7) {
+            width: 120px;
+            text-align: right;
+        }
+        
+        /* Responsive table */
+        @media (max-width: 768px) {
+            .password-table {
+                font-size: 12px;
+            }
+            
+            .password-table th,
+            .password-table td {
+                padding: 8px 4px;
+            }
+        }
+        
+        /* Button styles */
+        .action-btn {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .edit-btn {
+            background-color: #3B82F6;
+            color: white;
+        }
+        
+        .edit-btn:hover {
+            background-color: #2563EB;
+        }
+        
+        .delete-btn {
+            background-color: #EF4444;
+            color: white;
+        }
+        
+        .delete-btn:hover {
+            background-color: #DC2626;
+        }
+        
+        .copy-btn {
+            padding: 2px 6px;
+            background-color: #F3F4F6;
+            border: 1px solid #D1D5DB;
+            border-radius: 4px;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background-color: #E5E7EB;
+        }
+    </style>
+</head>
+<body class="p-8">
+
+    <!-- Main Container -->
+    <div class="max-w-6xl mx-auto backdrop-blur shadow-xl rounded-lg p-6 md:p-8 my-4">
+        <!-- Background Control Section -->
+        <div class="mb-6 p-4 bg-white bg-opacity-80 rounded-lg shadow-sm border border-gray-200">
+            <h3 class="text-lg font-semibold mb-3 text-gray-700">🎨 Customize Background</h3>
+            <div class="flex flex-wrap gap-4 items-center">
+                <div>
+                    <label for="backgroundUpload" class="block text-sm font-medium text-gray-700 mb-1">Upload Background Image</label>
+                    <input type="file" id="backgroundUpload" accept="image/*" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                </div>
+                <div>
+                    <button id="removeBackground" class="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors">
+                        Remove Background
+                    </button>
+                </div>
+                <div>
+                    <button id="randomBackground" class="px-4 py-2 bg-purple-500 text-white text-sm font-medium rounded-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors">
+                        Random Unsplash
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <h1 class="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-8">🔐 Secure Password Manager</h1>
+
+        <!-- Form for Creating and Updating Password Entries -->
+        <div class="mb-8 p-6 bg-white bg-opacity-90 rounded-lg shadow-sm backdrop-blur">
+            <h2 id="form-title" class="text-xl md:text-2xl font-semibold mb-6 text-gray-700">Add New Password</h2>
+            <form id="passwordForm" class="space-y-6">
+                <input type="hidden" id="passwordId">
+
+                <!-- First Row - Title and Website -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Title *</label>
+                        <input type="text" id="title" required placeholder="e.g., Gmail, Facebook, Bank Account" class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label for="website" class="block text-sm font-medium text-gray-700 mb-2">Website URL *</label>
+                        <input type="url" id="website" required placeholder="https://example.com" class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    </div>
+                </div>
+
+                <!-- Second Row - Username and Password -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username/Email *</label>
+                        <input type="text" id="username" required placeholder="username or email@example.com" class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+                        <div class="relative">
+                            <input type="password" id="password" required class="block w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                            <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-4 flex items-center">
+                                <span class="text-gray-400 hover:text-gray-600 text-lg">👁️</span>
+                            </button>
+                        </div>
+                        <button type="button" id="generatePassword" class="mt-2 px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 transition-colors">
+                            🎲 Generate Strong Password
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Third Row - Notes and Icon -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">Notes (Optional)</label>
+                        <textarea id="notes" rows="4" placeholder="Additional notes or security questions..." class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label for="icon" class="block text-sm font-medium text-gray-700 mb-2">Icon (Optional)</label>
+                        <input type="file" id="icon" accept="image/*" class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                        <div id="icon-preview" class="mt-3 hidden">
+                            <div class="flex items-center space-x-3">
+                                <img id="preview-icon" src="" alt="Preview" class="w-16 h-16 object-cover rounded-lg shadow-sm border border-gray-200">
+                                <span class="text-sm text-gray-500">Icon Preview</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="pt-4">
+                    <button type="submit" id="submitBtn" class="w-full inline-flex justify-center items-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        <span class="mr-2">💾</span>
+                        Save Password
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Password List Section -->
+        <div class="p-6 bg-white bg-opacity-90 rounded-lg shadow-sm backdrop-blur">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl md:text-2xl font-semibold text-gray-700">🔑 Saved Passwords</h2>
+                <div class="text-sm text-gray-500">
+                    <span id="password-count">0 passwords</span>
+                </div>
+            </div>
+            <div id="passwords-list-container">
+                <p id="loading-message" class="text-center text-gray-500 py-8">Loading passwords...</p>
+                <!-- This table will be populated by JavaScript -->
+                <div class="overflow-x-auto hidden" id="table-container">
+                    <table class="min-w-full divide-y divide-gray-200 password-table" id="passwords-table">
+                        <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
+                            <tr>
+                                <th scope="col" class="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Icon</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Title</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Website</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Username</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Password</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Created</th>
+                                <th scope="col" class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="passwords-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Password rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Store the API URL for easy reference
+        const API_URL = 'http://10.15.12.174:3000/api/passwords';
+
+        // Get references to all the important DOM elements
+        const form = document.getElementById('passwordForm');
+        const passwordIdInput = document.getElementById('passwordId');
+        const titleInput = document.getElementById('title');
+        const websiteInput = document.getElementById('website');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const notesInput = document.getElementById('notes');
+        const iconInput = document.getElementById('icon');
+        const iconPreview = document.getElementById('icon-preview');
+        const previewIcon = document.getElementById('preview-icon');
+        const togglePassword = document.getElementById('togglePassword');
+        const generatePassword = document.getElementById('generatePassword');
+        const formTitle = document.getElementById('form-title');
+        const submitBtn = document.getElementById('submitBtn');
+        const passwordsTable = document.getElementById('passwords-table');
+        const passwordsTableBody = document.getElementById('passwords-table-body');
+        const tableContainer = document.getElementById('table-container');
+        const loadingMessage = document.getElementById('loading-message');
+        
+        // Background control elements
+        const backgroundUpload = document.getElementById('backgroundUpload');
+        const removeBackground = document.getElementById('removeBackground');
+        const randomBackground = document.getElementById('randomBackground');
+
+        // Background management functions
+        function setBackground(imageUrl) {
+            document.body.style.backgroundImage = `url(${imageUrl})`;
+            localStorage.setItem('customBackground', imageUrl);
+        }
+
+        function removeBackgroundImage() {
+            document.body.style.backgroundImage = '';
+            document.body.style.backgroundColor = '#f3f4f6';
+            localStorage.removeItem('customBackground');
+        }
+
+        function loadRandomBackground() {
+            const width = window.screen.width || 1920;
+            const height = window.screen.height || 1080;
+            const randomId = Math.floor(Math.random() * 1000);
+            const unsplashUrl = `https://picsum.photos/${width}/${height}?random=${randomId}`;
+            setBackground(unsplashUrl);
+        }
+
+        // Background upload handler
+        backgroundUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    setBackground(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Remove background handler
+        removeBackground.addEventListener('click', removeBackgroundImage);
+
+        // Random background handler
+        randomBackground.addEventListener('click', loadRandomBackground);
+
+        // Load saved background on page load
+        function loadSavedBackground() {
+            const savedBackground = localStorage.getItem('customBackground');
+            if (savedBackground) {
+                setBackground(savedBackground);
+            }
+        }
+
+        // Password management functions
+        function generateStrongPassword() {
+            const length = 16;
+            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?";
+            let password = "";
+            for (let i = 0; i < length; i++) {
+                password += charset.charAt(Math.floor(Math.random() * charset.length));
+            }
+            return password;
+        }
+
+        // Toggle password visibility
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.innerHTML = type === 'password' ? '<span class="text-gray-400 hover:text-gray-600">👁️</span>' : '<span class="text-gray-400 hover:text-gray-600">🙈</span>';
+        });
+
+        // Generate password
+        generatePassword.addEventListener('click', function() {
+            passwordInput.value = generateStrongPassword();
+        });
+
+        // Handle icon preview
+        iconInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewIcon.src = e.target.result;
+                    iconPreview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                iconPreview.classList.add('hidden');
+            }
+        });
+
+        // Copy to clipboard function
+        function copyToClipboard(text, button) {
+            navigator.clipboard.writeText(text).then(function() {
+                const originalText = button.innerHTML;
+                button.innerHTML = '<span class="text-green-600">✓ Copied!</span>';
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                }, 2000);
+            });
+        }
+
+        // Helper function to format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Function to fetch and display all passwords
+        async function fetchPasswords() {
+            try {
+                // Show a loading message while fetching
+                loadingMessage.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+                
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch passwords');
+                }
+                const passwords = await response.json();
+                
+                // Update password count
+                const countElement = document.getElementById('password-count');
+                countElement.textContent = `${passwords.length} password${passwords.length !== 1 ? 's' : ''}`;
+                
+                // Clear existing table rows
+                passwordsTableBody.innerHTML = '';
+                
+                // Populate the table with fetched passwords
+                passwords.forEach((password, index) => {
+                    const row = document.createElement('tr');
+                    row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                    
+                    const iconDisplay = password.icon 
+                        ? `<img src="${password.icon}" alt="${password.title}" class="w-12 h-12 object-cover rounded-lg mx-auto border border-gray-200">` 
+                        : '<div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center text-white text-lg mx-auto">🔒</div>';
+                    
+                    const websiteLink = password.website.startsWith('http') ? password.website : `https://${password.website}`;
+                    const shortWebsite = password.website.replace(/^https?:\/\//, '').replace(/^www\./, '');
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-center">${iconDisplay}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-semibold text-gray-900 truncate" title="${password.title}">${password.title}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a href="${websiteLink}" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 hover:underline truncate block transition-colors" title="${password.website}">
+                                ${shortWebsite}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm text-gray-700 truncate flex-1" title="${password.username}">${password.username}</span>
+                                <button onclick="copyToClipboard('${password.username}', this)" class="copy-btn">📋</button>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center space-x-2">
+                                <span class="password-hidden text-sm text-gray-700 flex-1">••••••••</span>
+                                <button onclick="togglePasswordDisplay(this, '${password.password}')" class="copy-btn">👁️</button>
+                                <button onclick="copyToClipboard('${password.password}', this)" class="copy-btn">📋</button>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(password.createdAt)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                            <button onclick="editPassword('${password._id}', '${password.title}', '${password.website}', '${password.username}', '${password.password}', '${password.notes || ''}', '${password.icon || ''}')" class="action-btn edit-btn">✏️ Edit</button>
+                            <button onclick="deletePassword('${password._id}')" class="action-btn delete-btn">🗑️ Delete</button>
+                        </td>
+                    `;
+                    passwordsTableBody.appendChild(row);
+                });
+
+                // Show the table and hide the loading message if passwords exist
+                if (passwords.length > 0) {
+                    tableContainer.classList.remove('hidden');
+                    loadingMessage.classList.add('hidden');
+                } else {
+                    loadingMessage.innerHTML = `
+                        <div class="text-center py-12">
+                            <div class="text-6xl mb-4">🔐</div>
+                            <div class="text-xl text-gray-600 mb-2">No passwords found</div>
+                            <div class="text-gray-500">Add your first password to get started!</div>
+                        </div>
+                    `;
+                    loadingMessage.classList.remove('hidden');
+                }
+
+            } catch (error) {
+                console.error('Error fetching passwords:', error);
+                loadingMessage.innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="text-6xl mb-4">⚠️</div>
+                        <div class="text-xl text-red-600 mb-2">Error loading passwords</div>
+                        <div class="text-gray-500">Please check your connection and try again.</div>
+                    </div>
+                `;
+                loadingMessage.classList.remove('hidden');
+            }
+        }
+
+        // Toggle password display in table
+        function togglePasswordDisplay(button, password) {
+            const span = button.previousElementSibling;
+            if (span.textContent === '••••••••') {
+                span.textContent = password;
+                button.innerHTML = '🙈';
+            } else {
+                span.textContent = '••••••••';
+                button.innerHTML = '👁️';
+            }
+        }
+
+        // Function to handle form submission (create or update)
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Get values from the form
+            const title = titleInput.value;
+            const website = websiteInput.value;
+            const username = usernameInput.value;
+            const password = passwordInput.value;
+            const notes = notesInput.value;
+            const passwordId = passwordIdInput.value;
+            
+            // Handle icon
+            let iconData = null;
+            if (iconInput.files[0]) {
+                const reader = new FileReader();
+                iconData = await new Promise((resolve) => {
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(iconInput.files[0]);
+                });
+            }
+            
+            const data = { 
+                title, 
+                website, 
+                username,
+                password,
+                notes,
+                icon: iconData
+            };
+
+            try {
+                let response;
+                if (passwordId) {
+                    // Update an existing password
+                    response = await fetch(`${API_URL}/${passwordId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data),
+                    });
+                } else {
+                    // Create a new password
+                    response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data),
+                    });
+                }
+                
+                if (!response.ok) {
+                    throw new Error('API request failed');
+                }
+                
+                // After success, reset the form and refresh the password list
+                form.reset();
+                resetFormState();
+                fetchPasswords();
+
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                showCustomAlert('An error occurred. Please check the console.');
+            }
+        });
+
+        // Function to set up the form for editing
+        function editPassword(id, title, website, username, password, notes, icon) {
+            formTitle.textContent = 'Update Password';
+            submitBtn.textContent = 'Update Password';
+            passwordIdInput.value = id;
+            titleInput.value = title;
+            websiteInput.value = website;
+            usernameInput.value = username;
+            passwordInput.value = password;
+            notesInput.value = notes;
+            
+            // Show existing icon if available
+            if (icon && icon !== 'null' && icon !== '') {
+                previewIcon.src = icon;
+                iconPreview.classList.remove('hidden');
+            } else {
+                iconPreview.classList.add('hidden');
+            }
+        }
+
+        // Function to reset the form to its initial state
+        function resetFormState() {
+            formTitle.textContent = 'Add New Password';
+            submitBtn.textContent = 'Save Password';
+            passwordIdInput.value = '';
+            iconPreview.classList.add('hidden');
+            form.reset();
+        }
+
+        // Function to delete a password
+        async function deletePassword(id) {
+            showCustomConfirm('Are you sure you want to delete this password?', async () => {
+                try {
+                    const response = await fetch(`${API_URL}/${id}`, {
+                        method: 'DELETE',
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Deletion failed');
+                    }
+                    
+                    // Refresh the list after successful deletion
+                    fetchPasswords();
+                } catch (error) {
+                    console.error('Error deleting password:', error);
+                    showCustomAlert('An error occurred during deletion. Please check the console.');
+                }
+            });
+        }
+        
+        // Custom modal functions to replace alert() and confirm()
+        function createModal(message, isConfirm = false, onConfirm = null) {
+            const modalContainer = document.createElement('div');
+            modalContainer.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex justify-center items-center';
+            modalContainer.innerHTML = `
+                <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                    <div class="mt-3 text-center">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Notification</h3>
+                        <div class="mt-2 px-7 py-3">
+                            <p class="text-sm text-gray-500">${message}</p>
+                        </div>
+                        <div class="items-center px-4 py-3">
+                            ${isConfirm ? `
+                                <button id="confirm-btn" class="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-24 shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+                                    Delete
+                                </button>
+                                <button id="cancel-btn" class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-24 shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 ml-3">
+                                    Cancel
+                                </button>
+                            ` : `
+                                <button id="ok-btn" class="px-4 py-2 bg-indigo-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    OK
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modalContainer);
+
+            if (isConfirm) {
+                document.getElementById('confirm-btn').onclick = () => {
+                    onConfirm();
+                    modalContainer.remove();
+                };
+                document.getElementById('cancel-btn').onclick = () => modalContainer.remove();
+            } else {
+                document.getElementById('ok-btn').onclick = () => modalContainer.remove();
+            }
+        }
+
+        function showCustomAlert(message) {
+            createModal(message);
+        }
+
+        function showCustomConfirm(message, onConfirm) {
+            createModal(message, true, onConfirm);
+        }
+        
+        // Initial fetch of passwords when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSavedBackground();
+            fetchPasswords();
+        });
+    </script>
+</body>
+</html>
