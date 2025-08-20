@@ -102,24 +102,35 @@ dist
 # TernJS port file
 .tern-port
 
-# MongoDB data files
-mongodb/data/*.wt
-mongodb/data/*.lock
-mongodb/data/diagnostic.data/
-mongodb/data/journal/
-mongodb/data/storage.bson
-mongodb/data/WiredTiger*
-mongodb/data/_mdb_catalog.wt
-mongodb/data/collection-*.wt
-mongodb/data/index-*.wt
-mongodb/data/sizeStorer.wt
-
-# Keep the mongodb data directory structure but ignore the actual data
+# MongoDB data files - Ignore all data but keep directory structure
+mongodb/data/*
 !mongodb/data/.gitkeep
 
+# MongoDB specific files (additional patterns)
+*.wt
+*.lock
+diagnostic.data/
+journal/
+storage.bson
+WiredTiger*
+_mdb_catalog.wt
+collection-*.wt
+index-*.wt
+sizeStorer.wt
+
 # Logs
-logs
+logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Application specific logs
+app.log
+error.log
+access.log
+debug.log
 
 # OS generated files
 .DS_Store
@@ -158,3 +169,21 @@ uploads/
 # Local development files
 .local
 .cache/
+
+# Backup files
+*.bak
+*.backup
+*.swp
+*.swo
+*~
+*.orig
+
+# Process files
+*.pid
+*.seed
+*.pid.lock
+
+# Security files
+.secret
+secrets/
+private/
