@@ -421,6 +421,28 @@ NODE_ENV=development
 CORS_ORIGIN=http://localhost:4000
 ```
 
+### การรัน MongoDB ด้วย Docker
+
+คุณสามารถรัน MongoDB ด้วย Docker ได้ง่าย ๆ ด้วยคำสั่งนี้:
+
+```bash
+docker run --name some-mongo \
+   -p 27017:27017 \
+   -v /home/user/mongodb/data:/data/db \
+   -e MONGO_INITDB_ROOT_USERNAME=root \
+   -e MONGO_INITDB_ROOT_PASSWORD=password \
+   -d mongo:latest --auth
+```
+
+**รายละเอียด:**
+- `--name some-mongo` ตั้งชื่อ container
+- `-p 27017:27017` เปิด port สำหรับ MongoDB
+- `-v /home/kjpiya/mongodb/data:/data/db` เชื่อมต่อโฟลเดอร์ข้อมูล
+- `-e MONGO_INITDB_ROOT_USERNAME=root` กำหนด username
+- `-e MONGO_INITDB_ROOT_PASSWORD=password` กำหนด password
+- `-d mongo:latest --auth` รันแบบ background และเปิด authentication
+
+---
 ### Docker Support
 
 ```dockerfile
