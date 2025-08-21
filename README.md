@@ -454,7 +454,7 @@ docker run --name some-mongo \
 
 - `--name some-mongo` ตั้งชื่อ container
 - `-p 27017:27017` เปิด port สำหรับ MongoDB
-- `-v /home/kjpiya/mongodb/data:/data/db` เชื่อมต่อโฟลเดอร์ข้อมูล
+- `-v /home/user/mongodb/data:/data/db` เชื่อมต่อโฟลเดอร์ข้อมูล
 - `-e MONGO_INITDB_ROOT_USERNAME=root` กำหนด username
 - `-e MONGO_INITDB_ROOT_PASSWORD=password` กำหนด password
 - `-d mongo:latest --auth` รันแบบ background และเปิด authentication
